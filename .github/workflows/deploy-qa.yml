@@ -1,0 +1,102 @@
+name: Salesforce CI/CD to qa
+
+# Trigger the workflow on PRs to qa and Pushes (Merges) to KHISIT
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - qa
+    path:
+      - 'force-app/**'     
+  push:
+    branches:
+      - qa
+    path:
+      - 'force-app/**'  
+
+jobs:
+  # JOB 1: VALIDATION
+  # Runs only when a PR is open/updated targeting KHISIT
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for git diff to work correctly
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Salesforce CLI
+        run: npm install @salesforce/cli --global
+
+      - name: Install SGD Plugin
+        run: echo y | sf plugins install sfdx-git-delta
+
+      - name: Authenticate with Salesforce
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL_qa}}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias qa-org
+          rm auth_url.txt
+
+      - name: Generate Delta Package (PR)
+        # Compare PR HEAD against the base branch (KHISIT)
+        run: |
+          mkdir changed-sources
+          sf sgd source delta --to "HEAD" --from "origin/${{ github.base_ref }}" --output changed-sources --generate-delta --source force-app
+
+      - name: Run Validation Deployment
+        # Validate only the changes found in the delta package
+        run: |
+          if [ -f "changed-sources/package/package.xml" ]; then
+            sf project deploy validate --manifest changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --target-org khisit-org --wait 10
+          else
+            echo "No changes detected to validate."
+          fi
+
+  # JOB 2: DEPLOYMENT
+  # Runs only when code is pushed (merged) to KHISIT
+  deploy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for git diff
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Salesforce CLI
+        run: npm install @salesforce/cli --global
+
+      - name: Install SGD Plugin
+        run: echo y | sf plugins install sfdx-git-delta
+
+      - name: Authenticate with Salesforce
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL_KHISIT}}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias khisit-org
+          rm auth_url.txt
+
+      - name: Generate Delta Package (Push)
+        # Compare HEAD against the previous commit to deploy only what was merged
+        run: |
+          mkdir changed-sources
+          sf sgd source delta --to "HEAD" --from "HEAD^" --output changed-sources --generate-delta --source force-app
+
+      - name: Deploy to KHISIT Org
+        # Deploy only the changes found in the delta package
+        run: |
+          if [ -f "changed-sources/package/package.xml" ]; then
+            sf project deploy start --manifest changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --target-org khisit-org --wait 10
+          else
+            echo "No changes detected to deploy."
+          fi
