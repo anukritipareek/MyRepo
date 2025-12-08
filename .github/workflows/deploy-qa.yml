@@ -39,7 +39,7 @@ jobs:
 
       - name: Authenticate with Salesforce
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL_qa}}" > auth_url.txt
+          echo "${{ secrets.SFDX_AUTH_URL_QA}}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias qa-org
           rm auth_url.txt
 
@@ -82,7 +82,7 @@ jobs:
 
       - name: Authenticate with Salesforce
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL_qa}}" > auth_url.txt
+          echo "${{ secrets.SFDX_AUTH_URL_QA}}" > auth_url.txt
           sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias qa-org
           rm auth_url.txt
 
