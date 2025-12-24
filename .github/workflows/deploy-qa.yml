@@ -6,12 +6,12 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - qa
-    path:
+    paths:
       - 'force-app/**'     
   push:
     branches:
       - qa
-    path:
+    paths:
       - 'force-app/**'  
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
         # Validate only the changes found in the delta package
         run: |
           if [ -f "changed-sources/package/package.xml" ]; then
-            sf project deploy validate --manifest changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --target-org qa-org --wait 10
+            sf project deploy start -x changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --dry-run --target-org qa-org --wait 10
           else
             echo "No changes detected to validate."
           fi
@@ -96,7 +96,7 @@ jobs:
         # Deploy only the changes found in the delta package
         run: |
           if [ -f "changed-sources/package/package.xml" ]; then
-            sf project deploy start --manifest changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --target-org qa-org --wait 10
+            sf project deploy start -x changed-sources/package/package.xml --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml --target-org qa-org --wait 10
           else
             echo "No changes detected to deploy."
           fi
