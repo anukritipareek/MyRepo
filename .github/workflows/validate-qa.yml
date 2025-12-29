@@ -39,6 +39,12 @@ jobs:
           mkdir changed-sources
           sf sgd source delta --to "HEAD" --from "origin/${{ github.base_ref }}" \
             --output changed-sources --generate-delta --source force-app
+      
+      - name: Debug delta structure
+        run: |
+          echo "Listing changed-sources:"
+          ls -R changed-sources
+
 
       - name: Run Validation Deployment
         run: |
