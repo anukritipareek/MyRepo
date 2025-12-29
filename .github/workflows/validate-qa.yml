@@ -1,0 +1,74 @@
+name: Salesforce Validation to QA
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - qa
+    paths:
+      - 'force-app/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Salesforce CLI
+        run: npm install @salesforce/cli --global
+
+      - name: Install SGD Plugin
+        run: echo y | sf plugins install sfdx-git-delta
+
+      - name: Authenticate with Salesforce
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL_QA }}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias qa-org
+          rm auth_url.txt
+
+      - name: Generate Delta Package (PR)
+        run: |
+          mkdir changed-sources
+          sf sgd source delta --to "HEAD" --from "origin/${{ github.base_ref }}" \
+            --output changed-sources --generate-delta --source force-app
+
+      - name: Run Validation Deployment
+        run: |
+          if [ ! -f "changed-sources/package/package.xml" ]; then
+            echo "No changes detected to validate."
+            exit 0
+          fi
+
+          if [ -d "changed-sources/force-app/main/default/classes" ] || \
+             [ -d "changed-sources/force-app/main/default/triggers" ]; then
+            echo "Apex detected. Running validation with specified tests..."
+            sf project deploy start \
+              -x changed-sources/package/package.xml \
+              --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml \
+              --test-level RunSpecifiedTests \
+              --tests $(<tests/apex-specified-tests.txt) \
+              --dry-run \
+              --target-org qa-org \
+              --wait 10 \
+              --ignore-warnings \
+              --verbose
+          else
+            echo "No Apex detected. Running validation without tests..."
+            sf project deploy start \
+              -x changed-sources/package/package.xml \
+              --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml \
+              --test-level NoTestRun \
+              --dry-run \
+              --target-org qa-org \
+              --wait 10 \
+              --ignore-warnings \
+              --verbose
+          fi
