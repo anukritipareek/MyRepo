@@ -44,6 +44,12 @@ jobs:
         run: |
           echo "Listing changed-sources:"
           ls -R changed-sources
+          
+      - name: Debug package.xml
+        run: |
+          echo "----- package.xml -----"
+          cat changed-sources/package/package.xml
+    
 
 
       - name: Run Validation Deployment
