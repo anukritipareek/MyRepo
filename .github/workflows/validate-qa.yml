@@ -8,6 +8,9 @@ on:
     paths:
       - 'force-app/**'
 
+env:
+  HAS_ORG_AUTH: ""
+    
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -49,38 +52,22 @@ jobs:
         run: |
           echo "----- package.xml -----"
           cat changed-sources/package/package.xml
-    
+  
+      # APEX TEST CLASS IDENTIFICATION
 
+      - name: Identify Apex Test Classes
+        run: ./scripts/map_tests.sh
 
-      - name: Run Validation Deployment
-        shell: bash
+      # STAGE 6: INTUAT ENVIRONMENT VALIDATION
+
+      - name: QA QUALITY GATE VALIDATION
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.base_ref || github.ref_name }}
         run: |
-          if [ ! -f "changed-sources/package/package.xml" ]; then
-            echo "No changes detected to validate."
-            exit 0
-          fi
-
-          if [ -d "changed-sources/force-app/main/default/classes" ] || [ -d "changed-sources/force-app/main/default/triggers" ]; then
-            echo "Apex detected. Running validation with specified tests..."
-            sf project deploy start \
-              -x changed-sources/package/package.xml \
-              --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml \
-              --test-level RunSpecifiedTests \
-              --tests $(<tests/apex-specified-tests.txt) \
-              --dry-run \
-              --target-org qa-org \
-              --wait 10 \
-              --ignore-warnings \
-              --verbose
+          set -e
+          echo "🚀 Running QA Environment Quality Gates Validation"
+          if ./scripts/validate_deployment.sh; then
+            echo "✅ QA Quality Gates passed successfully"
           else
-            echo "No Apex detected. Running validation without tests..."
-            sf project deploy start \
-              -x changed-sources/package/package.xml \
-              --post-destructive-changes changed-sources/destructiveChanges/destructiveChanges.xml \
-              --test-level NoTestRun \
-              --dry-run \
-              --target-org qa-org \
-              --wait 10 \
-              --ignore-warnings \
-              --verbose
+            echo "❌ QA Quality Gates failed"
           fi
