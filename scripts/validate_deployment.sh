@@ -65,7 +65,8 @@ if find changed-sources/force-app -name "*.cls" -o -name "*.trigger" 2>/dev/null
       --source-dir changed-sources/force-app \
       --target-org "${ORG_NAME:-qa-org}" \
       --test-level RunSpecifiedTests \
-      --tests "$RELATED_TESTS_CSV" ; then
+      --tests "$RELATED_TESTS_CSV" 
+      --ignore-conflicts ; then
       summary "✅ Validation passed with mapped tests"
     else
       summary "⚠️  Validation failed with mapped tests - trying fallback"
