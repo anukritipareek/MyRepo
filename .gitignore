@@ -6,6 +6,5 @@ certs
 .forceignore
 
 #Logs & Other files
-scripts/*
 .log
 .DS_Store
