@@ -8,8 +8,9 @@ on:
     paths:
       - 'force-app/**'
 
-env:
-  HAS_ORG_AUTH: ""
+permissions:
+  contents: write
+  actions: read
     
 jobs:
   validate:
