@@ -63,7 +63,7 @@ if find changed-sources/force-app -name "*.cls" -o -name "*.trigger" 2>/dev/null
     
     if sf project deploy start \
       --source-dir changed-sources/force-app \
-      --target-org "${ORG_NAME:-qa-sdo}" \
+      --target-org "${ORG_NAME:-qa-org}" \
       --dry-run \
       --test-level RunSpecifiedTests \
       --tests "$RELATED_TESTS_CSV" ; then
