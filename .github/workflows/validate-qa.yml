@@ -57,8 +57,9 @@ jobs:
       # APEX TEST CLASS IDENTIFICATION
 
       - name: Identify Apex Test Classes
-        run: chmod +x ./scripts/map_tests.sh
-        run: ./scripts/map_tests.sh
+        run: |
+          chmod +x ./scripts/map_tests.sh
+          ./scripts/map_tests.sh
 
       # STAGE 6: INTUAT ENVIRONMENT VALIDATION
 
