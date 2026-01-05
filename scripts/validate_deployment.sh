@@ -61,7 +61,7 @@ if find changed-sources/force-app -name "*.cls" -o -name "*.trigger" 2>/dev/null
 
     summary "🔄 Running validation..."
     
-    if sf project deploy validate \
+    if sf project deploy start \
       --source-dir changed-sources/force-app \
       --target-org "${ORG_NAME:-qa-org}" \
       --test-level RunSpecifiedTests \
