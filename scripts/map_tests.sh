@@ -158,12 +158,7 @@ echo "TESTS_IN_DELTA=$ALL_TESTS" >> "$GITHUB_ENV"
 
 # Create JSON report
 
-{
-  "classes": $(echo "$ALL_CLASSES" | xargs -n1 2>/dev/null | jq -R . | jq -s . || echo '[]'),
-  "tests": $(echo "$ALL_TESTS" | xargs -n1 2>/dev/null | jq -R . | jq -s . || echo '[]'),
-  "mapped_tests": $(echo "$MAPPED_TESTS" | xargs -n1 2>/dev/null | jq -R . | jq -s . || echo '[]')
-}
-EOF
+
 
 echo ""
 echo "✅ COMPLETED: Test identification finished"
