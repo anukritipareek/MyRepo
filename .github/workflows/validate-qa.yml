@@ -57,6 +57,7 @@ jobs:
       # APEX TEST CLASS IDENTIFICATION
 
       - name: Identify Apex Test Classes
+        run: chmod +x ./scripts/map_tests.sh
         run: ./scripts/map_tests.sh
 
       # STAGE 6: INTUAT ENVIRONMENT VALIDATION
@@ -67,6 +68,7 @@ jobs:
         run: |
           set -e
           echo "🚀 Running QA Environment Quality Gates Validation"
+          chmod +x ./scripts/validate_deployment.sh
           if ./scripts/validate_deployment.sh; then
             echo "✅ QA Quality Gates passed successfully"
           else
