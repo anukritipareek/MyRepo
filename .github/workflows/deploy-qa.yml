@@ -3,7 +3,7 @@ name: Salesforce Deployment to QA
 on:
   push:
     branches:
-      - qa
+      - qa1
     paths:
       - 'force-app/**'
 
